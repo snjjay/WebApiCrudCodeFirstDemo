@@ -9,9 +9,13 @@ namespace WebApiCrudCodeFirstDemo.Data
 {
     public class ApplicationDbContext : DbContext
     {
-        public ApplicationDbContext() : base("WebApiCrudDBConn"){}
+        public ApplicationDbContext() : base("WebApiCrudDBConn") { }
 
         public DbSet<Employee> Employees { get; set; }
+
+        public DbSet<User> Users { get; set; }
+
+        public DbSet<ClientDetail> ClientDetails { get; set; }
 
     }
 }

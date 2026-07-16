@@ -14,11 +14,11 @@ namespace WebApiCrudCodeFirstDemo.Controllers
     [EnableCors(origins: "*", headers: "*", methods: "*")]
     public class EmployeesController : ApiController
     {
-        public HttpResponseMessage Get() 
+        public HttpResponseMessage Get()
         {
             using (ApplicationDbContext dbContext = new ApplicationDbContext())
             {
-                return Request.CreateResponse(HttpStatusCode.OK,dbContext.Employees.ToList());
+                return Request.CreateResponse(HttpStatusCode.OK, dbContext.Employees.ToList());
             }
         }
 
@@ -31,7 +31,7 @@ namespace WebApiCrudCodeFirstDemo.Controllers
                 {
                     return Request.CreateResponse(HttpStatusCode.OK, emp);
                 }
-                else 
+                else
                 {
                     return Request.CreateErrorResponse(HttpStatusCode.NotFound, "Employee with Id " + id + " not found in database");
                 }
@@ -116,5 +116,35 @@ namespace WebApiCrudCodeFirstDemo.Controllers
 
             }
         }
+
+
+        //// Disabled  authorization to following methods only 
+
+        //ApplicationDbContext dbContext = new ApplicationDbContext();
+        //[Authorize(Roles = ("User"))]
+        //public HttpResponseMessage GetEmployeeById(int id)
+        //{
+        //    var user = dbContext.Employees.FirstOrDefault(e => e.Id == id);
+        //    return Request.CreateResponse(HttpStatusCode.OK, user);
+        //}
+
+        //[Authorize(Roles = ("Admin, SuperAdmin"))]
+        //[Route("api/Employee/GetSomeEmployees")]
+        //public HttpResponseMessage GetSomeEmployees()
+        //{
+        //    var user = dbContext.Employees.Where(e => e.Id <= 10);
+        //    return Request.CreateResponse(HttpStatusCode.OK, user);
+        //}
+
+        //[Authorize(Roles = ("SuperAdmin"))]
+        //[Route("api/Employee/GetEmployees")]
+        //public HttpResponseMessage GetEmployees()
+        //{
+        //    var user = dbContext.Employees.ToList();
+        //    return Request.CreateResponse(HttpStatusCode.OK, user);
+        //}
+
+
+
     }
 }

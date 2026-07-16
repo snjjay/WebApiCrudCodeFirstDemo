@@ -6,14 +6,14 @@ namespace WebApiCrudCodeFirstDemo.Migrations
     using System.Data.Entity.Migrations.Infrastructure;
     using System.Resources;
     
-    [GeneratedCode("EntityFramework.Migrations", "6.4.4")]
-    public sealed partial class InitialCreate : IMigrationMetadata
+    [GeneratedCode("EntityFramework.Migrations", "6.5.2")]
+    public sealed partial class AddedNewTable2 : IMigrationMetadata
     {
-        private readonly ResourceManager Resources = new ResourceManager(typeof(InitialCreate));
+        private readonly ResourceManager Resources = new ResourceManager(typeof(AddedNewTable2));
         
         string IMigrationMetadata.Id
         {
-            get { return "202207301436567_InitialCreate"; }
+            get { return "202606220930250_AddedNewTable2"; }
         }
         
         string IMigrationMetadata.Source
