@@ -186,37 +186,61 @@ steps:
       !**\TestPlatform.TestHost.dll
 
 # ------------------------------------------------------------
+
 # 8. PUBLISH THE APPLICATION
+
 # ------------------------------------------------------------
 
 # "Build" and "Publish" are different.
+
 #
+
 # BUILD:
+
 # Checks and compiles your source code.
+
 #
+
 # PUBLISH:
-# Creates a deployable ZIP package containing the files
+
+# Creates a deployable folder containing the files
+
 # required to run the ASP.NET Web API application on Azure App Service.
+
 #
-# The ZIP package will be placed in:
+
+# The files will be placed in:
+
 #
-# $(Build.ArtifactStagingDirectory)
+
+# $(Build.ArtifactStagingDirectory)\publish
+
 #
+
 # This is a temporary folder provided by Azure DevOps.
+
 # ------------------------------------------------------------
 
-- task: MSBuild@1
-  displayName: 'Publish application'
+- task: CopyFiles@2
+  displayName: 'Prepare application files'
   inputs:
-    solution: '$(solution)'
-    platform: 'Any CPU'
-    configuration: '$(buildConfiguration)'
-    msbuildArguments: >
-      /p:DeployOnBuild=true
-      /p:WebPublishMethod=Package
-      /p:PackageAsSingleFile=true
-      /p:SkipInvalidConfigurations=true
-      /p:PackageLocation="$(Build.ArtifactStagingDirectory)\WebApiCrudCodeFirstDemo.zip"
+    SourceFolder: '$(Build.SourcesDirectory)\WebApiCrudCodeFirstDemo'
+    Contents: |
+      **
+      !bin\**
+      !obj\**
+      !packages\**
+    TargetFolder: '$(Build.ArtifactStagingDirectory)\publish'
+
+
+- task: ArchiveFiles@2
+  displayName: 'Create deployment ZIP package'
+  inputs:
+    rootFolderOrFile: '$(Build.ArtifactStagingDirectory)\publish'
+    includeRootFolder: false
+    archiveType: 'zip'
+    archiveFile: '$(Build.ArtifactStagingDirectory)\WebApiCrudCodeFirstDemo.zip'
+    replaceExistingArchive: true
 
 # ------------------------------------------------------------
 # 9. PUBLISH THE ARTIFACT
@@ -276,13 +300,10 @@ steps:
 # The ZIP file that should be deployed.
 # ------------------------------------------------------------
 
-- task: PowerShell@2
-  displayName: 'Find all generated files'
+- task: AzureRmWebAppDeployment@4
+  displayName: 'Deploy to Azure App Service'
   inputs:
-    targetType: 'inline'
-    script: |
-      Write-Host "===== ARTIFACT STAGING DIRECTORY ====="
-      Get-ChildItem -Path "$(Build.ArtifactStagingDirectory)" -Recurse -Force
-
-      Write-Host "===== SOURCE DIRECTORY ZIP FILES ====="
-      Get-ChildItem -Path "$(Build.SourcesDirectory)" -Recurse -Filter *.zip -Force
+    azureSubscription: 'devops-service-connection'
+    appType: 'webApp'
+    WebAppName: 'WebApiCrudCodeFirstDemo20260716151845'
+    package: '$(Build.ArtifactStagingDirectory)\WebApiCrudCodeFirstDemo.zip'
