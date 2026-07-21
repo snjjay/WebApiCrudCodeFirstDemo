@@ -205,18 +205,18 @@ steps:
 # This is a temporary folder provided by Azure DevOps.
 # ------------------------------------------------------------
 
-- task: VSBuild@1
+- task: MSBuild@1
   displayName: 'Publish application'
   inputs:
     solution: '$(solution)'
     platform: 'Any CPU'
     configuration: '$(buildConfiguration)'
-    msbuildArgs: >
+    msbuildArguments: >
       /p:DeployOnBuild=true
       /p:WebPublishMethod=Package
       /p:PackageAsSingleFile=true
       /p:SkipInvalidConfigurations=true
-      /p:PackageLocation=$(Build.ArtifactStagingDirectory)\WebApiCrudCodeFirstDemo.zip
+      /p:PackageLocation="$(Build.ArtifactStagingDirectory)\WebApiCrudCodeFirstDemo.zip"
 
 # ------------------------------------------------------------
 # 9. PUBLISH THE ARTIFACT
