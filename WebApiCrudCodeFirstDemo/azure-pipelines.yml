@@ -276,10 +276,13 @@ steps:
 # The ZIP file that should be deployed.
 # ------------------------------------------------------------
 
-- task: AzureRmWebAppDeployment@4
-  displayName: 'Deploy to Azure App Service'
+- task: PowerShell@2
+  displayName: 'Find all generated files'
   inputs:
-    azureSubscription: 'devops-service-connection'
-    appType: 'webApp'
-    WebAppName: 'WebApiCrudCodeFirstDemo20260716151845'
-    package: '$(Build.ArtifactStagingDirectory)\WebApiCrudCodeFirstDemo.zip'
+    targetType: 'inline'
+    script: |
+      Write-Host "===== ARTIFACT STAGING DIRECTORY ====="
+      Get-ChildItem -Path "$(Build.ArtifactStagingDirectory)" -Recurse -Force
+
+      Write-Host "===== SOURCE DIRECTORY ZIP FILES ====="
+      Get-ChildItem -Path "$(Build.SourcesDirectory)" -Recurse -Filter *.zip -Force
