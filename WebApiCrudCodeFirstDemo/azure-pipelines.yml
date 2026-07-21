@@ -227,7 +227,6 @@ steps:
     SourceFolder: '$(Build.SourcesDirectory)\WebApiCrudCodeFirstDemo'
     Contents: |
       **
-      !bin\**
       !obj\**
       !packages\**
     TargetFolder: '$(Build.ArtifactStagingDirectory)\publish'
