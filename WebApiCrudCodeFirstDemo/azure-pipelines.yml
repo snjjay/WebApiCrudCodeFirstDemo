@@ -216,7 +216,7 @@ steps:
       /p:WebPublishMethod=Package
       /p:PackageAsSingleFile=true
       /p:SkipInvalidConfigurations=true
-      /p:PackageLocation="$(Build.ArtifactStagingDirectory)\WebApiCrudCodeFirstDemo.zip"
+      /p:PackageLocation=$(Build.ArtifactStagingDirectory)\WebApiCrudCodeFirstDemo.zip
 
 # ------------------------------------------------------------
 # 9. PUBLISH THE ARTIFACT
@@ -242,6 +242,22 @@ steps:
     PathtoPublish: '$(Build.ArtifactStagingDirectory)'
     ArtifactName: 'drop'
     publishLocation: 'Container'
+
+
+
+# If the Publish step succeeds but the ZIP is still not there, add this temporary diagnostic step after the Publish task:
+# ------------------------------------------------------------
+- task: PowerShell@2
+  displayName: 'Check generated deployment package'
+  inputs:
+    targetType: 'inline'
+    script: |
+      Write-Host "Files in artifact staging directory:"
+      Get-ChildItem -Path "$(Build.ArtifactStagingDirectory)" -Recurse
+
+# Then the pipeline will show exactly what files were actually created.
+# ------------------------------------------------------------
+
 
 # ------------------------------------------------------------
 # 10. DEPLOY TO AZURE APP SERVICE
