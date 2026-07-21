@@ -1,34 +1,260 @@
-# ASP.NET Core
-# Build and test ASP.NET projects.
-# Add steps that publish symbols, save build artifacts, deploy, and more:
-# https://docs.microsoft.com/azure/devops/pipelines/apps/aspnet/build-aspnet-4
+# ============================================================
+# PIPELINE FLOW - EASY WAY TO REMEMBER
+# ============================================================
+#
+# 1. TRIGGER
+#    "When should I start?"
+#          
+#
+# 2. AGENT
+#    "Which temporary computer should run this?"
+#          
+#
+# 3. RESTORE
+#    "Download the required packages."
+#          
+#
+# 4. BUILD
+#    "Compile my C# code."
+#          
+#
+# 5. TEST
+#    "Do the automated tests pass?"
+#          
+#
+# 6. PUBLISH
+#    "Create the final runnable application."
+#          
+#
+# 7. ARTIFACT
+#    "Save the application package."
+#          
+#
+# 8. DEPLOY
+#    "Send the package to Azure App Service."
+#
+# ============================================================
+
+
+# ------------------------------------------------------------
+# 1. TRIGGER
+# ------------------------------------------------------------
+# Run this pipeline automatically whenever code is pushed
+# to the "main" branch in GitHub.
+#
+# Example:
+# You change code in Visual Studio
+#       
+# git push
+#       
+# GitHub main branch changes
+#       
+# Azure DevOps pipeline starts automatically
+# ------------------------------------------------------------
 
 trigger:
 - main
 
+
+# ------------------------------------------------------------
+# 2. AGENT / BUILD MACHINE
+# ------------------------------------------------------------
+# Azure DevOps provides a temporary Windows computer
+# to execute the pipeline.
+#
+# This computer will:
+# - Download your code from GitHub
+# - Restore NuGet packages
+# - Build your application
+# - Run tests
+# - Publish your application
+# - Deploy to Azure
+#
+# After the pipeline finishes, the temporary machine is removed.
+# ------------------------------------------------------------
+
 pool:
   vmImage: 'windows-latest'
 
+
+# ------------------------------------------------------------
+# 3. VARIABLES
+# ------------------------------------------------------------
+# These are reusable values used later in the pipeline.
+#
+# solution:
+# Find any .sln file in the GitHub repository.
+#
+# buildConfiguration:
+# Build the application in Release mode.
+# ------------------------------------------------------------
+
 variables:
   solution: '**/*.sln'
-  buildPlatform: 'Any CPU'
   buildConfiguration: 'Release'
 
+
+# ============================================================
+# PIPELINE STEPS
+# ============================================================
+
 steps:
-- task: NuGetToolInstaller@1
 
-- task: NuGetCommand@2
-  inputs:
-    restoreSolution: '$(solution)'
 
-- task: VSBuild@1
-  inputs:
-    solution: '$(solution)'
-    msbuildArgs: '/p:DeployOnBuild=true /p:WebPublishMethod=Package /p:PackageAsSingleFile=true /p:SkipInvalidConfigurations=true /p:PackageLocation="$(build.artifactStagingDirectory)"'
-    platform: '$(buildPlatform)'
-    configuration: '$(buildConfiguration)'
+# ------------------------------------------------------------
+# 4. INSTALL .NET SDK
+# ------------------------------------------------------------
+# The Azure DevOps build machine is temporary.
+# We tell it which .NET SDK version our application needs.
+#
+# Your project uses .NET 8.
+# ------------------------------------------------------------
 
-- task: VSTest@2
+- task: UseDotNet@2
+  displayName: 'Install .NET 8 SDK'
   inputs:
-    platform: '$(buildPlatform)'
-    configuration: '$(buildConfiguration)'
+    packageType: 'sdk'
+    version: '8.x'
+
+
+# ------------------------------------------------------------
+# 5. RESTORE NUGET PACKAGES
+# ------------------------------------------------------------
+# This downloads the NuGet packages required by the project.
+#
+# Equivalent local command:
+#
+# dotnet restore
+#
+# Examples of packages that may be downloaded:
+# - Entity Framework Core
+# - Swagger
+# - JWT packages
+# - Other NuGet dependencies
+# ------------------------------------------------------------
+
+- task: DotNetCoreCLI@2
+  displayName: 'Restore NuGet packages'
+  inputs:
+    command: 'restore'
+    projects: '$(solution)'
+
+
+# ------------------------------------------------------------
+# 6. BUILD THE APPLICATION
+# ------------------------------------------------------------
+# This compiles the C# code.
+#
+# Equivalent local command:
+#
+# dotnet build --configuration Release
+#
+# If there is a C# compilation error,
+# this pipeline step fails.
+# ------------------------------------------------------------
+
+- task: DotNetCoreCLI@2
+  displayName: 'Build application'
+  inputs:
+    command: 'build'
+    projects: '$(solution)'
+    arguments: '--configuration $(buildConfiguration) --no-restore'
+
+
+# ------------------------------------------------------------
+# 7. RUN AUTOMATED TESTS
+# ------------------------------------------------------------
+# This runs automated tests in projects whose names end with:
+#
+# *Tests.csproj
+#
+# Example:
+#
+# EmployeeApi.Tests.csproj
+#
+# If a test fails, the pipeline stops.
+# ------------------------------------------------------------
+
+- task: DotNetCoreCLI@2
+  displayName: 'Run automated tests'
+  inputs:
+    command: 'test'
+    projects: '**/*Tests.csproj'
+    arguments: '--configuration $(buildConfiguration) --no-build'
+
+
+# ------------------------------------------------------------
+# 8. PUBLISH THE APPLICATION
+# ------------------------------------------------------------
+# "Build" and "Publish" are different.
+#
+# BUILD:
+# Checks and compiles your source code.
+#
+# PUBLISH:
+# Creates the final files needed to run the application.
+#
+# These files will be placed in:
+#
+# $(Build.ArtifactStagingDirectory)
+#
+# This is a temporary folder provided by Azure DevOps.
+# ------------------------------------------------------------
+
+- task: DotNetCoreCLI@2
+  displayName: 'Publish application'
+  inputs:
+    command: 'publish'
+    projects: '**/*.csproj'
+    arguments: '--configuration $(buildConfiguration) --output $(Build.ArtifactStagingDirectory)'
+    zipAfterPublish: true
+
+
+# ------------------------------------------------------------
+# 9. PUBLISH THE ARTIFACT
+# ------------------------------------------------------------
+# The published application is now stored by Azure DevOps.
+#
+# The artifact is called:
+#
+# drop
+#
+# Think of an Artifact as:
+#
+# "The finished application package that is ready for deployment."
+#
+# The build machine is temporary.
+# The Artifact is saved so it can be used for deployment.
+# ------------------------------------------------------------
+
+- task: PublishBuildArtifacts@1
+  displayName: 'Store application Artifact'
+  inputs:
+    PathtoPublish: '$(Build.ArtifactStagingDirectory)'
+    ArtifactName: 'drop'
+    publishLocation: 'Container'
+
+
+# ------------------------------------------------------------
+# 10. DEPLOY TO AZURE APP SERVICE
+# ------------------------------------------------------------
+# This takes the ZIP file created during the Publish step
+# and deploys it to your Azure App Service.
+#
+# azureSubscription:
+# The Azure DevOps Service Connection.
+#
+# WebAppName:
+# The name of your Azure App Service.
+#
+# package:
+# The ZIP file that should be deployed.
+# ------------------------------------------------------------
+
+- task: AzureRmWebAppDeployment@4
+  displayName: 'Deploy to Azure App Service'
+  inputs:
+    azureSubscription: 'devops-service-connection'
+    appType: 'webApp'
+    WebAppName: 'WebApiCrudCodeFirstDemo20260716151845'
+    package: '$(Build.ArtifactStagingDirectory)/**/*.zip'
