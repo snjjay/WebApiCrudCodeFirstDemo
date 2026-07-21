@@ -181,6 +181,9 @@ steps:
     command: 'test'
     projects: '**/*Tests.csproj'
     arguments: '--configuration $(buildConfiguration) --no-build'
+    publishTestResults: true
+    nobuild: true
+    continueOnError: false
 
 
 # ------------------------------------------------------------
@@ -205,7 +208,7 @@ steps:
   displayName: 'Publish application'
   inputs:
     command: 'publish'
-    projects: '**/*.csproj'
+    projects: '**/WebApiCrudCodeFirstDemo.csproj'
     arguments: '--configuration $(buildConfiguration) --output $(Build.ArtifactStagingDirectory)'
     zipAfterPublish: true
 
